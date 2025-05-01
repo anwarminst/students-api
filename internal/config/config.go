@@ -29,7 +29,6 @@ func MustLoad() *Config {
 
 		if configPath == "" {
 			log.Fatal("config path is not set")
-
 		}
 	}
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
