@@ -81,3 +81,43 @@ func GetStudents(storage storage.Storage) http.HandlerFunc {
 
 	}
 }
+
+func UpdateStudent(storage storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		slog.Info("Updating a student by Id: ", slog.String("id", id))
+		intId, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			slog.Error("id not converting into integer : ", slog.String("id ", id))
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			return
+		}
+
+		var student types.Student
+		bodyErr := json.NewDecoder(r.Body).Decode(&student)
+		if errors.Is(bodyErr, io.EOF) {
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("empty body")))
+			return
+		}
+		if bodyErr != nil {
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			return
+		}
+		//request validation
+		if validationErr := validator.New().Struct(student); err != nil {
+			validateErr := validationErr.(validator.ValidationErrors)
+			response.WriteJson(w, http.StatusBadRequest, response.ValidationError(validateErr))
+			return
+		}
+
+		rowAffectedObj, err := storage.UpdateStudent(intId, student.Name, student.Email, student.Age)
+		if err != nil {
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			slog.Error("something wrong: ", slog.String("err:", fmt.Sprint(err)))
+			return
+		}
+
+		response.WriteJson(w, http.StatusOK, rowAffectedObj)
+		slog.Info("UpdateStudent rowsAffected", slog.String("count", fmt.Sprint(rowAffectedObj)))
+	}
+}
