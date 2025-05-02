@@ -7,4 +7,5 @@ type Storage interface {
 	RetrieveById(id int64) (types.Student, error)
 	RetrieveStudents() ([]types.Student, error)
 	UpdateStudent(id int64, name string, email string, age int) (types.Student, error)
+	DeleteStudent(id int64) (int64, error)
 }

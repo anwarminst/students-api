@@ -123,3 +123,25 @@ func (s *Sqlite) UpdateStudent(id int64, name, email string, age int) (types.Stu
 	slog.Info("student updated", slog.Int64("id", id))
 	return types.Student{Id: id, Name: name, Email: email, Age: age}, nil
 }
+
+func (s *Sqlite) DeleteStudent(id int64) (int64, error) {
+	stmt, err := s.Db.Prepare("DELETE FROM students WHERE id = ?")
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+	res, err := stmt.Exec(id)
+	if err != nil {
+		return 0, err
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	if rowsAffected == 0 {
+		return 0, fmt.Errorf("no student found with id %d", id)
+	}
+	slog.Info("student deleted", slog.Int64("id", id))
+	return id, nil
+
+}
